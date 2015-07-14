@@ -20,8 +20,8 @@
             Position=0,
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
-			[ValidateNotNullOrEmpty()]
-			[Alias('Name')]
+            [ValidateNotNullOrEmpty()]
+            [Alias('Name')]
             [string]
             $ComputerName,
             
@@ -29,8 +29,8 @@
             Position=1,
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
-			[ValidateNotNullOrEmpty()]
-			[Alias('Forest')]
+            [ValidateNotNullOrEmpty()]
+            [Alias('Forest')]
             [string]
             $Domain,
 
@@ -38,8 +38,8 @@
             Position=2,
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
-			[ValidateNotNullOrEmpty()]
-			[Alias('Zone')]
+            [ValidateNotNullOrEmpty()]
+            [Alias('Zone')]
             [string]
             $CentrifyZone,
 
@@ -47,8 +47,8 @@
             Position=3,
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
-			[ValidateNotNullOrEmpty()]
-			[Alias('OU')]
+            [ValidateNotNullOrEmpty()]
+            [Alias('OU')]
             [string]
             $Path,
 
@@ -56,16 +56,16 @@
             Position=4,
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
-			[ValidateNotNullOrEmpty()]
-			[string]
+            [ValidateNotNullOrEmpty()]
+            [string]
             $DataCenter,
 
             [Parameter(Mandatory=$true,
             Position=5,
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
-			[ValidateNotNullOrEmpty()]
-			[Alias('SecGroup')]
+            [ValidateNotNullOrEmpty()]
+            [Alias('SecGroup')]
             [string]
             $Group,
 
@@ -73,8 +73,8 @@
             Position=6,
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
-			[ValidateNotNullOrEmpty()]
-			[Alias('IP')]
+            [ValidateNotNullOrEmpty()]
+            [Alias('IP')]
             [string]
             $IPv4Address
         )
