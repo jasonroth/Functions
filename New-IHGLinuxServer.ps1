@@ -123,8 +123,8 @@
              Add-DnsServerResourceRecordA -ComputerName $ADServer.HostName -CreatePtr -IPv4Address $IPv4Address -Name $ComputerName -ZoneName $Domain
         }
         catch {
-        
+            throw $_.Exception.Message
         }
-	}
+    }
     End {}
 }
