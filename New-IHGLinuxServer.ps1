@@ -4,7 +4,8 @@
             Add linux server to IHG active directory
 
         .DESCRIPTION
-            Pre-provisions linux server in Centrify and AD, adds server to specified security group, and registers A and PTR records in DNS
+            Pre-provisions linux server in Centrify and AD, adds server to specified security group,
+            and registers A and PTR records in DNS
 
         .EXAMPLE
             New-IHGLinuxServer -ComputerName TestServer2 -Domain IHGINT.global -CentrifyZone 'OU=IHGINT,OU=Zones,OU=_Centrify,OU=IHG,DC=ihgint,DC=global' -Path 'OU=tst,OU=Servers,OU=AMER,OU=IHG,DC=ihgint,DC=global' -DataCenter IADD1 -Group 'CNA_AMER_IHGINT_CR_Dev_Channel_Corp' -IPv4Address 10.210.99.220
