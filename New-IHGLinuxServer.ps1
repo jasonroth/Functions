@@ -19,57 +19,57 @@
             [Parameter(Mandatory=$true,
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
-			[ValidateNotNullOrEmpty()]
-			[string]
+            [ValidateNotNullOrEmpty()]
+            [string]
             $ComputerName,
             
             [Parameter(Mandatory=$true,
             #ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
-			[ValidateNotNullOrEmpty()]
-			[string]
+            [ValidateNotNullOrEmpty()]
+            [string]
             $Domain,
 
             [Parameter(Mandatory=$true,
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
-			[ValidateNotNullOrEmpty()]
-			[string]
+            [ValidateNotNullOrEmpty()]
+            [string]
             $CentrifyZone,
 
             [Parameter(Mandatory=$true,
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
-			[ValidateNotNullOrEmpty()]
-			[string]
+            [ValidateNotNullOrEmpty()]
+            [string]
             $Path,
 
             [Parameter(Mandatory=$true,
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
-			[ValidateNotNullOrEmpty()]
-			[string]
+            [ValidateNotNullOrEmpty()]
+            [string]
             $DataCenter,
 
             [Parameter(Mandatory=$true,
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
-			[ValidateNotNullOrEmpty()]
-			[string]
+            [ValidateNotNullOrEmpty()]
+            [string]
             $Group,
 
             [Parameter(Mandatory=$true,
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
-			[ValidateNotNullOrEmpty()]
-			[string]
+            [ValidateNotNullOrEmpty()]
+            [string]
             $IPv4Address,
 
             [Parameter(Mandatory=$true,
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
-			[ValidateNotNullOrEmpty()]
-			[string]
+            [ValidateNotNullOrEmpty()]
+            [string]
             $NatAddress
         )
 
