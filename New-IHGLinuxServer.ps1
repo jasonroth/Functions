@@ -66,7 +66,7 @@
             [string]
             $IPv4Address,
 
-            [Parameter(Mandatory=$true,
+            [Parameter(Mandatory=$false,
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
             [ValidateNotNullOrEmpty()]
@@ -77,8 +77,27 @@
     Begin {}
     Process {
         foreach ($Name in $ComputerName) {
+# Confirm that computer object does not already exist
+            if (Get-ADComputer -Server $Domain -Identity $Name) {
+                Write-Verbose "Computer $Name already exists in $Domain"
+                BREAK
+            }
+# Confirm that target OU does exist
+            try {
+                Get-ADOrganizationalUnit -Server $Domain -Identity $Path
+            }
+            catch {
+                throw $_.Exception.Message
+            }
+# Confirm that Centrify Zone OU does exist
+            try {
+                Get-ADOrganizationalUnit -Server $Domain -Identity $CentrifyZone
+            }
+            catch {
+                throw $_.Exception.Message
+            }
 
-#Discover domain controller in target forest and site
+# Discover domain controller in target forest and site, and set was target DC
             try {
                 Get-ADDomainController -Discover -DomainName $Domain -SiteName $DataCenter -Writable -OutVariable 'ADServer'
                 Set-CdmPreferredServer -Domain $Domain -Server $ADServer.HostName
@@ -87,41 +106,38 @@
                 throw $_.Exception.Message
             }
 
-#Add computer object to AD and provision in Centrify
-            try {
-                New-CdmManagedComputer -Name $ComputerName -Zone $CentrifyZone -Container $Path -ErrorAction Continue
-            }
-            catch {
-                throw $_.Exception.Message
-            }
+# Add computer object to AD and provision in Centrify
+            New-CdmManagedComputer -Name $Name -Zone $CentrifyZone -Container $Path
     
-#Wait for computer object to be discoverable in AD or timeout after 60 seconds
-            if (-Not( Get-ADComputer -Server $ADServer.HostName -Filter {Name -eq $ComputerName})) {
+# Wait for computer object to be discoverable in AD or timeout after 60 seconds
+            if (-Not( Get-ADComputer -Server $ADServer.HostName -Filter {Name -eq $Name})) {
                 $i = 0
                 do {
                     Wait-Event -Timeout 10
                     $i++
                 }
-                until ((Get-ADComputer -Server $ADServer.HostName -Filter {Name -eq $ComputerName}) -or $i -eq 6)   
+                until ((Get-ADComputer -Server $ADServer.HostName -Filter {Name -eq $Name}) -or $i -eq 6)   
             }
 
-#Add computer object to AD security group
+# Add computer object to AD security group
             try {
-                Add-ADGroupMember -Identity $Group -Members ($ComputerName+'$') -Server $ADServer.HostName
+                Add-ADGroupMember -Identity $Group -Members ($Name+'$') -Server $ADServer.HostName
             }
             catch {
                 throw $_.Exception.Message
             }
     
-#Add DNS Records
+# Add DNS Records
             try {
-                 Add-DnsServerResourceRecordA -ComputerName $ADServer.HostName -CreatePtr -IPv4Address $IPv4Address -Name $ComputerName -ZoneName $Domain
-                 Add-DnsServerResourceRecordA -ComputerName $ADServer.HostName -CreatePtr -IPv4Address $NatAddress -Name $ComputerName-nat -ZoneName $Domain
+                 Add-DnsServerResourceRecordA -ComputerName $ADServer.HostName -CreatePtr -IPv4Address $IPv4Address -Name $Name -ZoneName $Domain
+                 if ($NatAddress) {
+                     Add-DnsServerResourceRecordA -ComputerName $ADServer.HostName -CreatePtr -IPv4Address $NatAddress -Name $Name+'-nat' -ZoneName $Domain
+                 }
             }
             catch {
                 throw $_.Exception.Message
             }
         }
-	}
+    }
     End {}
 }
