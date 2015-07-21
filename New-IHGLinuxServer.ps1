@@ -10,7 +10,7 @@
         .EXAMPLE
             New-IHGLinuxServer -ComputerName TestServer2 -Domain IHGINT.global -CentrifyZone 'OU=IHGINT,OU=Zones,OU=_Centrify,OU=IHG,DC=ihgint,DC=global' -Path 'OU=tst,OU=Servers,OU=AMER,OU=IHG,DC=ihgint,DC=global' -DataCenter IADD1 -Group 'CNA_AMER_IHGINT_CR_Dev_Channel_Corp' -IPv4Address 10.210.99.220
         
-		.EXAMPLE
+        .EXAMPLE
             Import-CSV NewServers.csv | New-IHGLinuxServer
   #>
 
@@ -78,13 +78,14 @@
     Process {
         foreach ($Name in $ComputerName) {
 # Confirm that computer object does not already exist
-            if (Get-ADComputer -Server $Domain -Identity $Name) {
+            if (Get-ADComputer -Server $Domain -Filter {Name -eq $Name}) {
                 Write-Verbose "Computer $Name already exists in $Domain"
                 BREAK
             }
 # Confirm that target OU does exist
             try {
                 Get-ADOrganizationalUnit -Server $Domain -Identity $Path
+                Write-Verbose "OU $Path does not exist in $Domain"
             }
             catch {
                 throw $_.Exception.Message
@@ -92,12 +93,13 @@
 # Confirm that Centrify Zone OU does exist
             try {
                 Get-ADOrganizationalUnit -Server $Domain -Identity $CentrifyZone
+                Write-Verbose "Centrify Zone $CentrifyZone does not exist in $Domain"
             }
             catch {
                 throw $_.Exception.Message
             }
 
-# Discover domain controller in target forest and site, and set was target DC
+# Discover domain controller in target forest and site, and set as target DC
             try {
                 Get-ADDomainController -Discover -DomainName $Domain -SiteName $DataCenter -Writable -OutVariable 'ADServer'
                 Set-CdmPreferredServer -Domain $Domain -Server $ADServer.HostName
