@@ -77,27 +77,6 @@
     Begin {}
     Process {
         foreach ($Name in $ComputerName) {
-# Confirm that computer object does not already exist
-            if (Get-ADComputer -Server $Domain -Filter {Name -eq $Name}) {
-                Write-Verbose "Computer $Name already exists in $Domain"
-                BREAK
-            }
-# Confirm that target OU does exist
-            try {
-                Get-ADOrganizationalUnit -Server $Domain -Identity $Path
-                Write-Verbose "OU $Path does not exist in $Domain"
-            }
-            catch {
-                throw $_.Exception.Message
-            }
-# Confirm that Centrify Zone OU does exist
-            try {
-                Get-ADOrganizationalUnit -Server $Domain -Identity $CentrifyZone
-                Write-Verbose "Centrify Zone $CentrifyZone does not exist in $Domain"
-            }
-            catch {
-                throw $_.Exception.Message
-            }
 
 # Discover domain controller in target forest and site, and set as target DC
             try {
@@ -105,11 +84,42 @@
                 Set-CdmPreferredServer -Domain $Domain -Server $ADServer.HostName
             }
             catch {
+                Write-Verbose "Unable to connect to domain controller in $Domain"
                 throw $_.Exception.Message
             }
 
+# Confirm that computer object does not already exist
+            try {
+                Get-ADComputer -Server $Domain -Filter {Name -eq $Name} -ErrorAction Stop
+                Write-Verbose "OU $Path does not exist in $Domain"
+            }
+            catch {
+                throw $_.Exception.Message
+            }
+# Confirm that target OU does exist
+            try {
+                Get-ADOrganizationalUnit -Server $Domain -Identity $Path -ErrorAction Stop
+                Write-Verbose "OU $Path does not exist in $Domain"
+            }
+            catch {
+                throw $_.Exception.Message
+            }
+# Confirm that Centrify Zone OU does exist
+            try {
+                Get-ADOrganizationalUnit -Server $Domain -Identity $CentrifyZone -ErrorAction Stop
+                Write-Verbose "Centrify Zone $CentrifyZone does not exist in $Domain"
+            }
+            catch {
+                throw $_.Exception.Message
+            }
+            
 # Add computer object to AD and provision in Centrify
-            New-CdmManagedComputer -Name $Name -Zone $CentrifyZone -Container $Path
+            try {
+                New-CdmManagedComputer -Name $Name -Zone $CentrifyZone -Container $Path
+            }
+            catch {
+                throw $_.Exception.Message
+            }
     
 # Wait for computer object to be discoverable in AD or timeout after 60 seconds
             if (-Not( Get-ADComputer -Server $ADServer.HostName -Filter {Name -eq $Name})) {
