@@ -71,10 +71,16 @@
             ValueFromPipelineByPropertyName=$true)]
             [ValidateNotNullOrEmpty()]
             [string]
-            $NatAddress
+            $NatAddress,
+
+            [string]$ErrorLog = "$PSScriptRoot\Logs\NewServer",
+            
+            [switch]$LogErrors
         )
 
-    Begin {}
+    Begin {
+        Write-Verbose "Error log will be $ErrogLog"
+    }
     Process {
         foreach ($Name in $ComputerName) {
 
@@ -85,7 +91,7 @@
             }
             catch {
                 Write-Verbose "Unable to connect to domain controller in $Domain"
-                throw $_.Exception.Message
+                Write-Error -Message  $_.Exception.Message
             }
 
 # Confirm that computer object does not already exist
@@ -94,7 +100,7 @@
                 Write-Verbose "OU $Path does not exist in $Domain"
             }
             catch {
-                throw $_.Exception.Message
+                Write-Error -Message  $_.Exception.Message
             }
 # Confirm that target OU does exist
             try {
@@ -102,7 +108,7 @@
                 Write-Verbose "OU $Path does not exist in $Domain"
             }
             catch {
-                throw $_.Exception.Message
+                Write-Error -Message  $_.Exception.Message
             }
 # Confirm that Centrify Zone OU does exist
             try {
@@ -110,7 +116,7 @@
                 Write-Verbose "Centrify Zone $CentrifyZone does not exist in $Domain"
             }
             catch {
-                throw $_.Exception.Message
+                Write-Error -Message  $_.Exception.Message
             }
             
 # Add computer object to AD and provision in Centrify
@@ -118,7 +124,7 @@
                 New-CdmManagedComputer -Name $Name -Zone $CentrifyZone -Container $Path
             }
             catch {
-                throw $_.Exception.Message
+                Write-Error -Message  $_.Exception.Message
             }
     
 # Wait for computer object to be discoverable in AD or timeout after 60 seconds
@@ -136,7 +142,7 @@
                 Add-ADGroupMember -Identity $Group -Members ($Name+'$') -Server $ADServer.HostName
             }
             catch {
-                throw $_.Exception.Message
+                Write-Error -Message  $_.Exception.Message
             }
     
 # Add DNS Records
@@ -147,7 +153,7 @@
                  }
             }
             catch {
-                throw $_.Exception.Message
+                Write-Error -Message  $_.Exception.Message
             }
         }
     }

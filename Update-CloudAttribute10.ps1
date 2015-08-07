@@ -4,7 +4,6 @@ $Log = 'C:\_limbo\Attrib10_Update.csv'
 
 foreach ($User in $Users) {
     $Properties = [ordered] @{
-        #Sam = $User.SamAccountName
         UPN = $User.UserPrincipalName
         Attrib10 = $User.'msDS-cloudExtensionAttribute10'
         NewAttrib10 = 'CN='+$User.SamAccountName+'/O='+$User.CanonicalName.split(".")[0]
