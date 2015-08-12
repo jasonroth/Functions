@@ -73,13 +73,21 @@
             [string]
             $NatAddress,
 
-            [string]$ErrorLog = "$PSScriptRoot\Logs\NewServer",
+            [Parameter()]
+            [string]$ErrorLog,
             
+            [Parameter()]
             [switch]$LogErrors
         )
 
     Begin {
-        Write-Verbose "Error log will be $ErrogLog"
+        if ($LogErrors) {
+            if (-not($Errorlog)) {
+                $Date = Get-Date -Format MM_dd_yyyy_HH_mm
+                $ErrorLog = 'ServerBuildLog_'+$Date+'.log'
+            }
+            Write-Verbose "Error log will be $ErrogLog"
+        }
     }
     Process {
         foreach ($Name in $ComputerName) {
