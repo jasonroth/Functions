@@ -36,18 +36,49 @@
         $LocalPath = "$env:SystemDrive\Install"
         $LogPath = "$env:SystemDrive\logs\MOMAgent_Install"
         $LogFile = (Get-Date -Format yyyy_MM_dd)+"_MomAgent_Install.log"
-        $ManagemantServer = 'iadd1pwom1ap001.ihg.global'
+        $IHG_ManagemantServer = 'iadd1pwom2ap001.ihg.global'
+        $IHGINT_ManagemantServer = 'iadd1pwom1ap001.ihgint.global'
+        $IHGEXT_ManagemantServer = 'iadd1pwom2ap002.ihgext.global'
+        $CORP_ManagemantServer = 'iadd1pwom2ap003.corp.local'
         $MomAgent = 'MOMAgent.msi'
         $DCHelper = 'OOMADs.msi'
 
     }
     Process {
         foreach ($Computer in $ComputerName) {
+            $Domain = $Computer.split('.')[1..($Computer.split('.').Length)] -join('.')
+            if ($Domain -eq 'ihg.global') {
+                $ManagemantServer = $IHG_ManagemantServer
+            }
+            elseif ($Domain -eq 'ihgint.global') {
+                $ManagemantServer = $IHGINT_ManagemantServer
+            }
+            elseif ($Domain -eq 'ihgext.global') {
+                $ManagemantServer = $IHGEXT_ManagemantServer
+            }
+            elseif ($Domain -like '*corp.local') {
+                $ManagemantServer = $CORP_ManagemantServer
+            }            
+            
+            if (-not(Test-Connection -ComputerName $Computer -Count 1 -Quiet)) {
+                $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Unable to ping $Computer"
+                Write-Verbose $Message
+                $Message | Out-File $LogPath\$LogFile -Append
+                break
+            }
+
             try {
                 New-PSSession -ComputerName $Computer -OutVariable SCOMInstall -ErrorAction Stop | Out-Null
             }
             catch {
-                $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Unable to initiate remote session with client $Computer ;$_.Exception.Message"
+                $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Unable to initiate remote session with client $Computer ; $_"
+                Write-Verbose $Message
+                $Message | Out-File $LogPath\$LogFile -Append
+                break
+            }
+
+            if (Get-Service -ComputerName $Computer -Name HealthService) {
+                $Message = (Get-Date -Format HH:mm:ss).ToString()+" : SCOM agent already installed on client $Computer"
                 Write-Verbose $Message
                 $Message | Out-File $LogPath\$LogFile -Append
                 break
@@ -64,7 +95,7 @@
                     Invoke-WebRequest -Uri $Using:url/$Using:MomAgent -OutFile $Using:LocalPath\$Using:MomAgent
                 }
                 catch {
-                    $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Unable to download $Using:MomAgent from $Using:url ;$_.Exception.Message ; $Using:url/$Using:MomAgent $Using:LocalPath\$Using:MomAgent"
+                    $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Unable to download $Using:MomAgent from $Using:url ; $_"
                     Write-Verbose $Message
                     $Message| Out-File $Using:LogPath\$Using:LogFile -Append
                     break
