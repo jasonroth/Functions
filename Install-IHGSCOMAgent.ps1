@@ -101,9 +101,13 @@
                 break
             }
             
+            #Determine if target server is Domain Controller
+            
+            $DC = Get-ADDomainController -DomainName $Domain -Filter {DNSHostName -eq $Computer}
+            
             # Log successful remote connection
 
-            $Message = "Initiating remote install on client $Using:Computer, check client logs for details"
+            $Message = "Initiating remote install on client $Computer, check client logs for details"
             Write-Verbose $Message
             $Message | Out-File $LogPath\$LogFile -Append
 
@@ -138,6 +142,21 @@
                     break
                 }
 
+                #If server is domain controller, download OOMADs helper service
+
+                if ($Using:DC) {
+                    Write-Verbose "Downloading OOMADs agent from $url to client $Using:Computer"
+                    try {                    
+                        Invoke-WebRequest -Uri $Using:url/$Using:DCHelper -OutFile $Using:LocalPath\$Using:DCHelper
+                    }
+                    catch {
+                        $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Unable to download $Using:DCHelper from $Using:url ; $_"
+                        Write-Verbose $Message
+                        $Message| Out-File $Using:LogPath\$Using:LogFile -Append
+                        Remove-PSSession $SCOMInstall
+                        break
+                }
+
                 # Run msiexec to install agent msi
 
                 Write-Verbose "Installing SCOM agent on client $Using:Computer"
@@ -155,6 +174,23 @@
                     $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Failed in to install $Using:MomAgent ; $_ "
                     Write-Verbose $Message
                     $Message | Out-File $Using:LogPath\$Using:LogFile -Append
+                }
+
+                #If server is domain controller, install OOMADs helper service
+
+                if ($Using:DC) {
+                    try {
+                        Start-Process -FilePath `
+                        "$env:SystemRoot\system32\msiexec.exe" `
+                        -ErrorAction Stop `
+                        -Wait `
+                        -ArgumentList "/i $Using:LocalPath\$Using:DCHelper /qn /l*v $Using:LogPath\$Using:LogFile"
+                    }
+                    catch {
+                        $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Failed in to install $Using:MomAgent ; $_ "
+                        Write-Verbose $Message
+                        $Message | Out-File $Using:LogPath\$Using:LogFile -Append
+                    }
                 }
             }
 
