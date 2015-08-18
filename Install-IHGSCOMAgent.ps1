@@ -107,7 +107,7 @@
             
             # Log successful remote connection
 
-            $Message = "Initiating remote install on client $Computer, check client logs for details"
+            $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Initiating remote install on client $Computer, check client logs for details"
             Write-Verbose $Message
             $Message | Out-File $LogPath\$LogFile -Append
 
