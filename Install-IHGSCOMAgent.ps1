@@ -101,6 +101,12 @@
                 break
             }
             
+            # Log successful remote connection
+
+            $Message = "Initiating remote install on client $Using:Computer, check client logs for details"
+            Write-Verbose $Message
+            $Message | Out-File $LogPath\$LogFile -Append
+
             # Run code on target server
 
             Invoke-Command -Session $SCOMInstall -ScriptBlock {
