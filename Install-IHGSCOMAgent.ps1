@@ -27,7 +27,11 @@
 			[ValidateNotNullOrEmpty()]
 			[alias('DNSHostName')]
             [string[]]
-            $ComputerName
+            $ComputerName,
+
+            [Parameter()]
+			[PsCredential]
+            $Credential
         )
 
     Begin {
@@ -45,6 +49,7 @@
         $MomAgent = 'MOMAgent.msi'
         $DCHelper = 'OOMADs.msi'
 
+      
         # Create logging directory
 
         if (-not (Test-Path $LogPath)) {
@@ -79,10 +84,24 @@
                 break
             }
 
-            # Create remote powershell session
+            # Build Hash to be used for passing parameters to New-PSSession commandlet
+        
+            $PSSessionParams = @{
+                #'ComputerName' = $Computer
+                'ErrorAction' = 'Stop'
+                'OutVariable' = 'SCOMInstall'
+            }
+            # Add optional credentials parameters to hash
 
+            if ($Credential) {
+                $PSSessionParams.Add('Credential', $Credential)
+            }
+            
+            # Create remote powershell session
+            
             try {
-                New-PSSession -ComputerName $Computer -OutVariable SCOMInstall -ErrorAction Stop | Out-Null
+                #New-PSSession -ComputerName $PSSessionParams | Out-Null
+                New-PSSession -ComputerName $Computer -OutVariable SCOMInstall -ErrorAction Stop -Credential $Credential | Out-Null
             }
             catch {
                 $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Unable to initiate remote session with client $Computer ; $_"
@@ -103,7 +122,7 @@
             
             #Determine if target server is Domain Controller
             
-            $DC = Get-ADDomainController -DomainName $Domain -Filter {DNSHostName -eq $Computer}
+            $DC = Get-ADDomainController -Server $Domain -Filter {DNSHostName -eq $Computer}
             
             # Log successful remote connection
 
@@ -155,6 +174,7 @@
                         $Message| Out-File $Using:LogPath\$Using:LogFile -Append
                         Remove-PSSession $SCOMInstall
                         break
+                    }
                 }
 
                 # Run msiexec to install agent msi
