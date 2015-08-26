@@ -45,7 +45,7 @@
         $IHG_ManagemantServer = 'iadd1pwom2ap001.ihg.global'
         $IHGINT_ManagemantServer = 'iadd1pwom1ap001.ihgint.global'
         $IHGEXT_ManagemantServer = 'iadd1pwom2ap002.ihgext.global'
-        $CORP_ManagemantServer = 'iadd1pwom2ap003.corp.local'
+        $CORP_ManagemantServer = 'iadd1pwom2ap006.corp.local'
         $MomAgent = 'MOMAgent.msi'
         $DCHelper = 'OOMADs.msi'
 
@@ -109,20 +109,10 @@
                 $Message | Out-File $LogPath\$LogFile -Append
                 break
             }
-
-            # Determine if agent is already installed
-
-            $Installed = Get-Service -ComputerName $Computer -Name HealthService -ErrorAction SilentlyContinue
-            if ($Installed) {
-                $Message = (Get-Date -Format HH:mm:ss).ToString()+" : SCOM agent already installed on client $Computer"
-                Write-Verbose $Message
-                $Message | Out-File $LogPath\$LogFile -Append
-                break
-            }
             
-            #Determine if target server is Domain Controller
+            # Determine if target server is Domain Controller
             
-            $DC = Get-ADDomainController -Server $Domain -Filter {DNSHostName -eq $Computer}
+            $DC = Get-ADDomainController -Server $Domain -Filter {HostName -eq $Computer}
             
             # Log successful remote connection
 
@@ -147,18 +137,30 @@
                     New-Item -ItemType Directory -Path $Using:LocalPath -Force | Out-Null
                 }
                 
-                # Download agent from internal repository
+                # Determine if agent is already installed
 
-                Write-Verbose "Downloading SCOM agent from $url to client $Using:Computer"
-                try {                    
-                    Invoke-WebRequest -Uri $Using:url/$Using:MomAgent -OutFile $Using:LocalPath\$Using:MomAgent
-                }
-                catch {
-                    $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Unable to download $Using:MomAgent from $Using:url ; $_"
+                $Installed = Get-Service -ComputerName $Using:Computer -Name HealthService -ErrorAction SilentlyContinue
+
+                if ($Installed) {
+                    $Message = (Get-Date -Format HH:mm:ss).ToString()+" : SCOM agent already installed on client $Using:Computer"
                     Write-Verbose $Message
-                    $Message| Out-File $Using:LogPath\$Using:LogFile -Append
-                    Remove-PSSession $SCOMInstall
-                    break
+                    $Message | Out-File $Using:LogPath\$Using:LogFile -Append
+                }
+                else {
+                
+                    # Download agent from internal repository
+                
+                    Write-Verbose "Downloading SCOM agent from $url to client $Using:Computer"
+                    try {                    
+                        Invoke-WebRequest -Uri $Using:url/$Using:MomAgent -OutFile $Using:LocalPath\$Using:MomAgent
+                    }
+                    catch {
+                        $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Unable to download $Using:MomAgent from $Using:url ; $_"
+                        Write-Verbose $Message
+                        $Message| Out-File $Using:LogPath\$Using:LogFile -Append
+                        Remove-PSSession $SCOMInstall
+                        break
+                    }
                 }
 
                 #If server is domain controller, download OOMADs helper service
@@ -179,26 +181,32 @@
 
                 # Run msiexec to install agent msi
 
-                Write-Verbose "Installing SCOM agent on client $Using:Computer"
-                Write-Verbose "Management Group: $Using:ManagementGroup"
-                Write-Verbose "Management Server: $Using:ManagemantServer"
-                Write-Verbose "LogFile : $Using:LogPath\$Using:LogFile"
-                try {
-                    Start-Process -FilePath `
-                    "$env:SystemRoot\system32\msiexec.exe" `
-                    -ErrorAction Stop `
-                    -Wait `
-                    -ArgumentList "/i $Using:LocalPath\$Using:MomAgent USE_SETTINGS_FROM_AD=0 MANAGEMENT_GROUP=$Using:ManagementGroup MANAGEMENT_SERVER_DNS=$Using:ManagemantServer ACTIONS_USE_COMPUTER_ACCOUNT=1 USE_MANUALLY_SPECIFIED_SETTINGS=1 AcceptEndUserLicenseAgreement=1 /qn /l*v $Using:LogPath\$Using:LogFile"
-                }
-                catch {
-                    $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Failed in to install $Using:MomAgent ; $_ "
-                    Write-Verbose $Message
-                    $Message | Out-File $Using:LogPath\$Using:LogFile -Append
+                if (-not($Installed)) {
+                    Write-Verbose "Installing SCOM agent on client $Using:Computer"
+                    Write-Verbose "Management Group: $Using:ManagementGroup"
+                    Write-Verbose "Management Server: $Using:ManagemantServer"
+                    Write-Verbose "LogFile : $Using:LogPath\$Using:LogFile"
+
+                    try {
+                        Start-Process -FilePath `
+                        "$env:SystemRoot\system32\msiexec.exe" `
+                        -ErrorAction Stop `
+                        -Wait `
+                        -ArgumentList "/i $Using:LocalPath\$Using:MomAgent USE_SETTINGS_FROM_AD=0 MANAGEMENT_GROUP=$Using:ManagementGroup MANAGEMENT_SERVER_DNS=$Using:ManagemantServer ACTIONS_USE_COMPUTER_ACCOUNT=1 USE_MANUALLY_SPECIFIED_SETTINGS=1 AcceptEndUserLicenseAgreement=1 /qn /l*v $Using:LogPath\$Using:LogFile"
+                    }
+                    catch {
+                        $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Failed in to install $Using:MomAgent ; $_ "
+                        Write-Verbose $Message
+                        $Message | Out-File $Using:LogPath\$Using:LogFile -Append
+                    }
                 }
 
                 #If server is domain controller, install OOMADs helper service
 
                 if ($Using:DC) {
+                    Write-Verbose "Installing OOMADs agent on client $Using:Computer"
+                    Write-Verbose "LogFile : $Using:LogPath\$Using:LogFile"
+
                     try {
                         Start-Process -FilePath `
                         "$env:SystemRoot\system32\msiexec.exe" `
