@@ -3,7 +3,7 @@
 $Date = [datetime]'06/01/2013'
 
 # Search for enabled accounts created since $Date
-$Users = Get-IHGUser -Enabled | where Created -GT $Date
+$Users = Get-IHGUser * -Enabled | where Created -GT $Date
 
 # Configure Logging
 
