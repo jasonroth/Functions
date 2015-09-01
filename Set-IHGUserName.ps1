@@ -19,13 +19,13 @@ if (-not (Test-Path $LogPath)) {
         
 # Iterate through user accounts
 
-foreach ($User in $Users) {
+foreach ($User in $Users | Where UserPrincipalName -NotLike '*@global.corp.local') {
     
     # Create variables to use with Set-ADUser commandlet
 
     $Domain = ($User.UserPrincipalName).split('@')[1]
     try {
-        $NewDisplayName = $User.Surname.Trim()+", "+$User.GivenName.Trim()
+        $NewDisplayName = (Get-Culture).TextInfo.ToTitleCase($User.Surname.Trim()+", "+$User.GivenName.Trim())
     }
     catch {
         # Write Failures to error log
@@ -54,6 +54,8 @@ foreach ($User in $Users) {
 
         $Object = [PSCustomObject] @{
             UserPrincipalName = $User.UserPrincipalName
+            Surname = $User.Surname
+            GivenName = $User.GivenName
             PreviousDisplayName = $User.DisplayName
             NewDisplayName = $NewDisplayName
             Created = $User.Created
@@ -63,6 +65,7 @@ foreach ($User in $Users) {
 
         $Object | Export-Csv -NoTypeInformation -Append -Path $LogPath\$LogFile
         Remove-Variable Object
+        Remove-Variable User
     }
 }
         
