@@ -1,15 +1,16 @@
 ﻿# Set earliest date for user creation
 
-$Date = [datetime]'06/01/2013'
+$Date = (Get-Date).AddDays(-7)
 
 # Search for enabled accounts created since $Date
+
 $Users = Get-IHGUser * -Enabled | where Created -GT $Date
 
 # Configure Logging
 
-$LogPath = "$env:SystemDrive\logs\Change_DisplayName"
-$LogFile = (Get-Date -Format yyyy_MM_dd)+"_Change_DisplayName.csv"
-$ErrorLog = (Get-Date -Format yyyy_MM_dd)+"_Change_DisplayName_Errors.log"
+$LogPath = "$env:SystemDrive\logs\Set-CloudAttribute10"
+$LogFile = (Get-Date -Format yyyy_MM_dd)+"_Set-CloudAttribute10.csv"
+$ErrorLog = (Get-Date -Format yyyy_MM_dd)+"_Set-CloudAttribute10_Errors.log"
 
 # Create logging directory
 
@@ -19,33 +20,33 @@ if (-not (Test-Path $LogPath)) {
         
 # Iterate through user accounts
 
-foreach ($User in $Users | Where UserPrincipalName -NotLike '*@global.corp.local') {
+foreach ($User in $Users) {
     
     # Create variables to use with Set-ADUser commandlet
 
     $Domain = ($User.UserPrincipalName).split('@')[1]
     try {
-        $NewDisplayName = (Get-Culture).TextInfo.ToTitleCase($User.Surname.Trim()+", "+$User.GivenName.Trim())
+        $NewAttrib10 = 'CN='+$User.SamAccountName+'/O='+($User.UserPrincipalName.Split('@')[1]).split('.')[0]
     }
     catch {
         # Write Failures to error log
 
-        $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Unable to determine new DisplayName for $User"
+        $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Unable to determine new msDS-cloudExtensionAttribute10 for $User"
         Write-Verbose $Message
         $Message | Out-File -Append -FilePath $LogPath\$ErrorLog
     }
     
-    # Change the DisplayName if it does not currently start with "LastName, FirstName"
+    # Change the msDS-cloudExtensionAttribute10 if it is not correctly set
 
-    if ($User.DisplayName -notlike $NewDisplayName+'*') {
+    if ($User.'msDS-cloudExtensionAttribute10' -notlike $NewAttrib10) {
         try {
-            Set-ADUser -Server $Domain -Identity $User.SamAccountname -DisplayName $NewDisplayName -Verbose
+            Set-ADUser -Server $Domain -Identity $User.SamAccountname -Replace @{'MSDS-CloudExtensionAttribute10'=$NewAttrib10} -Verbose -WhatIf
         }
         catch {
            
            # Write Failures to error log
 
-           $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Failed to set DisplayName for $($User.UserPrincipalName)"
+           $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Failed to set MSDS-CloudExtensionAttribute10 for $($User.UserPrincipalName)"
            Write-Verbose $Message
            $Message | Out-File -Append -FilePath $LogPath\$ErrorLog 
         }
@@ -54,10 +55,8 @@ foreach ($User in $Users | Where UserPrincipalName -NotLike '*@global.corp.local
 
         $Object = [PSCustomObject] @{
             UserPrincipalName = $User.UserPrincipalName
-            Surname = $User.Surname
-            GivenName = $User.GivenName
-            PreviousDisplayName = $User.DisplayName
-            NewDisplayName = $NewDisplayName
+            'PreviousMSDS-CloudExtensionAttribute10' = $User.'msDS-cloudExtensionAttribute10'
+            'NewMSDS-CloudExtensionAttribute10' = $NewAttrib10
             Created = $User.Created
         }
         
@@ -65,9 +64,9 @@ foreach ($User in $Users | Where UserPrincipalName -NotLike '*@global.corp.local
 
         $Object | Export-Csv -NoTypeInformation -Append -Path $LogPath\$LogFile
     }
-    if ($Object) {Remove-Variable Object}
     if ($User) {Remove-Variable User}
     if ($Domain) {Remove-Variable Domain}
-    if ($NewDisplayName) {Remove-Variable NewDisplayName}
+    if ($NewAttrib10) {Remove-Variable NewAttrib10}
     if ($Message) {Remove-Variable Message}
+    if ($Object) {Remove-Variable Object}
 }
