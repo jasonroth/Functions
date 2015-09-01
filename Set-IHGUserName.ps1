@@ -66,6 +66,9 @@ foreach ($User in $Users | Where UserPrincipalName -NotLike '*@global.corp.local
         $Object | Export-Csv -NoTypeInformation -Append -Path $LogPath\$LogFile
         Remove-Variable Object
         Remove-Variable User
+        Remove-Variable Domain
+        Remove-Variable NewDisplayName
+        Remove-Variable Message
     }
 }
         
