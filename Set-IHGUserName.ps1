@@ -39,7 +39,7 @@ foreach ($User in $Users | Where UserPrincipalName -NotLike '*@global.corp.local
 
     if ($User.DisplayName -notlike $NewDisplayName+'*') {
         try {
-            Set-ADUser -Server $Domain -Identity $User.SamAccountname -DisplayName $NewDisplayName -Verbose -WhatIf
+            Set-ADUser -Server $Domain -Identity $User.SamAccountname -DisplayName $NewDisplayName -Verbose
         }
         catch {
            
@@ -71,4 +71,3 @@ foreach ($User in $Users | Where UserPrincipalName -NotLike '*@global.corp.local
         Remove-Variable Message
     }
 }
-        
