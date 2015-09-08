@@ -40,7 +40,7 @@ foreach ($User in $Users) {
 
     if ($User.'msDS-cloudExtensionAttribute10' -notlike $NewAttrib10) {
         try {
-            Set-ADUser -Server $Domain -Identity $User.SamAccountname -Replace @{'MSDS-CloudExtensionAttribute10'=$NewAttrib10} -Verbose -WhatIf
+            Set-ADUser -Server $Domain -Identity $User.SamAccountname -Replace @{'MSDS-CloudExtensionAttribute10'=$NewAttrib10} -Verbose
         }
         catch {
            
