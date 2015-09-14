@@ -53,5 +53,5 @@
                 Write-Output -InputObject $Object
             }
         }
-	}
+    }
 }
