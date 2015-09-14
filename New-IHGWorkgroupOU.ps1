@@ -29,7 +29,7 @@
         .EXAMPLE
             New-IHGWorkgroupOU -Workgroup 'tst' -Description 'test' -Domain 'ihgint.global' -DataCenter 'iadd1' -Verbose -PassThru
         
-		.EXAMPLE
+        .EXAMPLE
             New-IHGWorkgroupOU -Workgroup 'tst' -Description 'test' -Domain 'ihgext.global' -DataCenter 'sjcd1'
 			
         .EXAMPLE
@@ -44,8 +44,8 @@
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
             [ValidateLength(3,3)]
-			[ValidateNotNullOrEmpty()]
-			[string]
+            [ValidateNotNullOrEmpty()]
+            [string]
             $Workgroup,
 
             [Parameter(Mandatory=$true,
@@ -53,7 +53,7 @@
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
             [ValidateNotNullOrEmpty()]
-			[string]
+            [string]
             $Description,
 
             [Parameter(Mandatory=$true,
@@ -91,7 +91,8 @@
 # Create logging directory
 
         if (-not (Test-Path $LogPath)) {
-            New-Item -ItemType Directory -Path $LogPath -Force | Out-Null
+            New-Item -ItemType Directory -Path $LogPath -Force |
+            Out-Null
         }
     }
 
@@ -99,7 +100,8 @@
 # Discover domain controller in target forest and site, and set as target DC
         
         try {
-            Get-ADDomainController -Discover -DomainName $Domain -SiteName $DataCenter -Writable -OutVariable 'ADServer' -ErrorAction Stop | Out-Null
+            Get-ADDomainController -Discover -DomainName $Domain -SiteName $DataCenter -Writable -OutVariable 'ADServer' -ErrorAction Stop |
+            Out-Null
         }
         catch {
             $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Unable to connect to domain controller in $Domain"
