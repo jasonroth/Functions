@@ -142,13 +142,12 @@
             Write-Verbose $Message
             $Message | Out-File $LogPath\$LogFile -Append
         }
-    }
 
-    End {
 # Write object to pipeline if PassThru was selected
 
         if ($PassThru) {
             Write-Output $NewOU
         }
     }
-}
+
+    End {}
