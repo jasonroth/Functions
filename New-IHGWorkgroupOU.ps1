@@ -79,23 +79,18 @@
             [switch]
             $PassThru
         )
-
     Begin {        
 # Configure required variables
-
         $LogPath = "$env:SystemDrive\logs\New-IHGWorkgroupOU"
         $LogFile = (Get-Date -Format yyyy_MM_dd)+"_New-IHGWorkgroupOU.log"
 # Create logging directory
-
         if (-not (Test-Path $LogPath)) {
             New-Item -ItemType Directory -Path $LogPath -Force |
             Out-Null
         }
     }
-
     Process {    
 # Discover domain controller in target forest and site, and set as target DC
-        
         $DomainShortName = $Domain.ToString().Split('.')[0]
         try {
             Get-ADDomainController -Discover -DomainName $Domain -SiteName $DataCenter -Writable -OutVariable 'ADServer' -ErrorAction Stop |
@@ -107,7 +102,6 @@
             $Message | Out-File $LogPath\$LogFile -Append
         }
 # Build hash to pass parameters to New-ADOrganizationalUnit commandlet
-
         $OUPath = "OU=Servers,OU=AMER,OU=IHG,DC=$DomainShortName,DC=global"
         $OUCreateParams = @{
             Server = $ADServer.HostName
@@ -120,13 +114,11 @@
             ErrorAction = 'Stop'
         }
 # Add optional credentials parameters to hash
-
         if ($Credential) {
             $OUCreateParams.Add('Credential', $Credential)
         }
 # Create OU in active directory
-        
-        try {
+         try {
             New-ADOrganizationalUnit @OUCreateParams |
             Out-Null
             $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Successfully created workgroup OU $($NewOU.DistinguishedName)"
@@ -139,10 +131,8 @@
             $Message | Out-File $LogPath\$LogFile -Append
         }
 # Write object to pipeline if PassThru was selected
-
         if ($PassThru) {
             Write-Output $NewOU
         }
     }
-
     End {}
