@@ -85,8 +85,6 @@
 
         $LogPath = "$env:SystemDrive\logs\New-IHGWorkgroupOU"
         $LogFile = (Get-Date -Format yyyy_MM_dd)+"_New-IHGWorkgroupOU.log"
-        $DomainShortName = $Domain.ToString().Split('.')[0]
-        $OUPath = "OU=Servers,OU=AMER,OU=IHG,DC=$DomainShortName,DC=global"
 
 # Create logging directory
 
@@ -99,6 +97,7 @@
     Process {    
 # Discover domain controller in target forest and site, and set as target DC
         
+        $DomainShortName = $Domain.ToString().Split('.')[0]
         try {
             Get-ADDomainController -Discover -DomainName $Domain -SiteName $DataCenter -Writable -OutVariable 'ADServer' -ErrorAction Stop |
             Out-Null
@@ -110,7 +109,8 @@
         }
             
 # Build hash to pass parameters to New-ADOrganizationalUnit commandlet
-    
+
+        $OUPath = "OU=Servers,OU=AMER,OU=IHG,DC=$DomainShortName,DC=global"
         $OUCreateParams = @{
             Server = $ADServer.HostName
             Name = $WorkGroup
