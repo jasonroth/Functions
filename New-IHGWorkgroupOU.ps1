@@ -85,7 +85,6 @@
 
         $LogPath = "$env:SystemDrive\logs\New-IHGWorkgroupOU"
         $LogFile = (Get-Date -Format yyyy_MM_dd)+"_New-IHGWorkgroupOU.log"
-
 # Create logging directory
 
         if (-not (Test-Path $LogPath)) {
@@ -107,7 +106,6 @@
             Write-Verbose $Message
             $Message | Out-File $LogPath\$LogFile -Append
         }
-            
 # Build hash to pass parameters to New-ADOrganizationalUnit commandlet
 
         $OUPath = "OU=Servers,OU=AMER,OU=IHG,DC=$DomainShortName,DC=global"
@@ -121,13 +119,11 @@
             OutVariable = 'NewOU'
             ErrorAction = 'Stop'
         }
-
 # Add optional credentials parameters to hash
 
         if ($Credential) {
             $OUCreateParams.Add('Credential', $Credential)
         }
-
 # Create OU in active directory
         
         try {
@@ -142,7 +138,6 @@
             Write-Verbose $Message
             $Message | Out-File $LogPath\$LogFile -Append
         }
-
 # Write object to pipeline if PassThru was selected
 
         if ($PassThru) {
