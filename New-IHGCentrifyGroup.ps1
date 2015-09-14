@@ -1,4 +1,4 @@
-﻿Function New-IHGWorkgroupOU {
+﻿Function New-IHGCentrifyGroup {
     <#
         .SYNOPSIS
             Create AD OU for new IHG workgroup
@@ -29,7 +29,7 @@
         .EXAMPLE
             New-IHGWorkgroupOU -Workgroup 'tst' -Description 'test' -Domain 'ihgint.global' -DataCenter 'iadd1' -Verbose -PassThru
         
-        .EXAMPLE
+		.EXAMPLE
             New-IHGWorkgroupOU -Workgroup 'tst' -Description 'test' -Domain 'ihgext.global' -DataCenter 'sjcd1'
 			
         .EXAMPLE
@@ -44,8 +44,8 @@
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
             [ValidateLength(3,3)]
-            [ValidateNotNullOrEmpty()]
-            [string]
+			[ValidateNotNullOrEmpty()]
+			[string]
             $Workgroup,
 
             [Parameter(Mandatory=$true,
@@ -53,7 +53,7 @@
             ValueFromPipeline=$true,
             ValueFromPipelineByPropertyName=$true)]
             [ValidateNotNullOrEmpty()]
-            [string]
+			[string]
             $Description,
 
             [Parameter(Mandatory=$true,
@@ -79,60 +79,73 @@
             [switch]
             $PassThru
         )
+
     Begin {        
 # Configure required variables
-        $LogPath = "$env:SystemDrive\logs\New-IHGWorkgroupOU"
-        $LogFile = (Get-Date -Format yyyy_MM_dd)+"_New-IHGWorkgroupOU.log"
+
+        $LogPath = "$env:SystemDrive\logs\New-IHGCentrifyGroup"
+        $LogFile = (Get-Date -Format yyyy_MM_dd)+"_New-IHGCentrifyGroup.log"
+        $DomainShortName = $Domain.ToString().Split('.')[0]
+        $OUPath = "OU=Groups,OU=_Centrify,OU=IHG,DC=$DomainShortName,DC=global"
+
 # Create logging directory
+
         if (-not (Test-Path $LogPath)) {
-            New-Item -ItemType Directory -Path $LogPath -Force |
-            Out-Null
+            New-Item -ItemType Directory -Path $LogPath -Force | Out-Null
         }
     }
+
     Process {    
 # Discover domain controller in target forest and site, and set as target DC
-        $DomainShortName = $Domain.ToString().Split('.')[0]
+        
         try {
-            Get-ADDomainController -Discover -DomainName $Domain -SiteName $DataCenter -Writable -OutVariable 'ADServer' -ErrorAction Stop |
-            Out-Null
+            Get-ADDomainController -Discover -DomainName $Domain -SiteName $DataCenter -Writable -OutVariable 'ADServer' -ErrorAction Stop | Out-Null
         }
         catch {
             $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Unable to connect to domain controller in $Domain"
             Write-Verbose $Message
             $Message | Out-File $LogPath\$LogFile -Append
         }
-# Build hash to pass parameters to New-ADOrganizationalUnit commandlet
-        $OUPath = "OU=Servers,OU=AMER,OU=IHG,DC=$DomainShortName,DC=global"
-        $OUCreateParams = @{
+            
+# Build hash to pass parameters to New-ADSecurityGroup commandlet
+    
+        $CRGroupParams = @{
             Server = $ADServer.HostName
             Name = $WorkGroup
-            DisplayName = $WorkGroup.ToLower()
-            Description = $Description.ToLower()
+            DisplayName = $WorkGroup
+            Description = $Description
             Path = $OUPath
             PassThru = $true
             OutVariable = 'NewOU'
             ErrorAction = 'Stop'
         }
+
 # Add optional credentials parameters to hash
+
         if ($Credential) {
             $OUCreateParams.Add('Credential', $Credential)
         }
+
 # Create OU in active directory
-         try {
-            New-ADOrganizationalUnit @OUCreateParams |
-            Out-Null
-            $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Successfully created workgroup OU $($NewOU.DistinguishedName)"
-            Write-Verbose $Message
-            $Message | Out-File $LogPath\$LogFile -Append
+        
+        try {
+            New-ADOrganizationalUnit @OUCreateParams | Out-Null
+                $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Successfully created workgroup OU $($NewOU.DistinguishedName)"
+                Write-Verbose $Message
+                $Message | Out-File $LogPath\$LogFile -Append
         }
         catch {
             $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Unable to create OU $WorkGroup in $Domain with the error: $_"
             Write-Verbose $Message
             $Message | Out-File $LogPath\$LogFile -Append
         }
+    }
+
+    End {
 # Write object to pipeline if PassThru was selected
+
         if ($PassThru) {
             Write-Output $NewOU
         }
     }
-    End {}
+}
