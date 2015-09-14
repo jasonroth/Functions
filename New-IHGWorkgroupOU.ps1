@@ -131,10 +131,11 @@
 # Create OU in active directory
         
         try {
-            New-ADOrganizationalUnit @OUCreateParams | Out-Null
-                $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Successfully created workgroup OU $($NewOU.DistinguishedName)"
-                Write-Verbose $Message
-                $Message | Out-File $LogPath\$LogFile -Append
+            New-ADOrganizationalUnit @OUCreateParams |
+            Out-Null
+            $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Successfully created workgroup OU $($NewOU.DistinguishedName)"
+            Write-Verbose $Message
+            $Message | Out-File $LogPath\$LogFile -Append
         }
         catch {
             $Message = (Get-Date -Format HH:mm:ss).ToString()+" : Unable to create OU $WorkGroup in $Domain with the error: $_"
