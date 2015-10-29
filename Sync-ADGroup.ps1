@@ -7,7 +7,8 @@
             Sync members of AD groups in the same, or different AD forests/domains.
             Syc methods are
                             Mirror : Membership of DifferenceGroup will be set to mirror that of ReferenceGroup.
-                            TwoWay : Membership of both groups will be syncronized, adding and removing accounts from each group as needed.
+                            TwoWay : Membership of both groups will be syncronized, adding and removing accounts as needed.
+                                     No accounts will be removed from ReferenceGroup
                             Update : Members of ReferenceGroup will be added to DifferenceGroup. No accounts are removed from either group.
 
         .PARAMETER ReferenceGroup
@@ -27,6 +28,7 @@
             Syc methods are
                             Mirror : Membership of DifferenceGroup will be set to mirror that of ReferenceGroup.
                             TwoWay : Membership of both groups will be syncronized, adding and removing accounts from each group as needed.
+                                     No accounts will be removed from ReferenceGroup
                             Update : Members of ReferenceGroup will be added to DifferenceGroup. No accounts are removed from either group.
 
         .PARAMETER Credential
