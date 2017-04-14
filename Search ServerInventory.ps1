@@ -229,10 +229,10 @@ Function Get-ServerInventory {
 
 $Date = (get-date).AddDays(-30)
 
-$Domains = @('
-    ihg.global',
-    'ihgext.global',
-    'ihgint.global'
+$Domains = @(
+    'domain1.global',
+    'domain2.global',
+    'domain3.global'
 )
 
 $Servers = foreach ($Domain in $Domains) {
