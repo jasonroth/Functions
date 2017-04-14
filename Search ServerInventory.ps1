@@ -261,7 +261,7 @@ Get-RSJob  |
 Wait-RSJob -ShowProgress |
 Receive-RSJob |
 
-Out-GridView -PassThru | ForEach-Object {do-thathnig -verbose}
+Out-GridView -PassThru | ForEach-Object {Do-ThaThing -Verbose}
 
 # Export-Csv -NoTypeInformation C:\Scripts\output\ServerInventory.csv
 
