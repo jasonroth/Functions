@@ -227,6 +227,12 @@ Function Get-ServerInventory {
     End {}
 }
 
+
+
+#
+### Controller script
+#
+
 $Date = (get-date).AddDays(-30)
 
 $Domains = @(
@@ -255,10 +261,9 @@ Get-RSJob  |
 Wait-RSJob -ShowProgress |
 Receive-RSJob |
 
-Out-GridView -PassThru | %{Install-IHGChefAgent -Computer $_.Name -Environment Production -Verbose}
+Out-GridView -PassThru | ForEach-Object {do-thathnig -verbose}
 
 # Export-Csv -NoTypeInformation C:\Scripts\output\ServerInventory.csv
 
 Get-RSJob |
 Remove-RSJob -Force
-
